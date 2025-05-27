@@ -1,11 +1,29 @@
 # Reproducer for uncaught exception in llama.cpp's llama-server during tool use
 ```console
 $ llama-cli --version
+ggml_cuda_init: GGML_CUDA_FORCE_MMQ:    yes
+ggml_cuda_init: GGML_CUDA_FORCE_CUBLAS: no
+ggml_cuda_init: found 1 CUDA devices:
+  Device 0: NVIDIA GeForce RTX 3090, compute capability 8.6, VMM: yes
+register_backend: registered backend CUDA (1 devices)
+register_device: registered device CUDA0 (NVIDIA GeForce RTX 3090)
+register_backend: registered backend RPC (0 devices)
+register_backend: registered backend CPU (1 devices)
+register_device: registered device CPU (AMD Ryzen 9 7950X 16-Core Processor)
+load_backend: failed to find ggml_backend_init in /build/llama.cpp-debug/bin/libggml-cuda.so
+load_backend: failed to find ggml_backend_init in /build/llama.cpp-debug/bin/libggml-rpc.so
+load_backend: failed to find ggml_backend_init in /build/llama.cpp-debug/bin/libggml-cpu.so
+version: 5505 (9065ca71)
+built with cc (Debian 12.2.0-14+deb12u1) 12.2.0 for x86_64-linux-gnu
 ```
 
 ## How to reproduce
+Clone this repo, and run:
+```console
+$ PATH=/build/llama.cpp-debug/bin:$PATH ./reproducer-llamacpp.sh
+```
 <details>
-<summary>Output up until entering gdb from command `$ PATH=/build/llama.cpp-debug/bin:$PATH ./reproducer-llamacpp.sh`</summary>
+<summary>Output up until entering gdb from above command</summary>
 
 ```
 + PORT=7476
