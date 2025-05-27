@@ -10107,3 +10107,11 @@ $4 = {<std::_Vector_base<common_chat_msg_diff, std::allocator<common_chat_msg_di
 ```
 
 </details>
+
+
+## Additional information
+The current gguf at huggingface: https://huggingface.co/bartowski/Qwen_Qwen3-14B-GGUF/blob/bd080f768a6401c2d5a7fa53a2e50cd8218a9ce2/Qwen_Qwen3-14B-Q8_0.gguf
+```console
+$ openssl sha256 ~/.cache/llama.cpp/bartowski_Qwen_Qwen3-14B-GGUF_Qwen_Qwen3-14B-Q8_0.gguf
+SHA2-256(/home/bjorn/.cache/llama.cpp/bartowski_Qwen_Qwen3-14B-GGUF_Qwen_Qwen3-14B-Q8_0.gguf)= 62e390154916e1dc6b00f63d997bda39e8f9679c209dcabb69bdff5043fac2e0
+```
