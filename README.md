@@ -1,21 +1,33 @@
 # Reproducer for uncaught exception in llama.cpp's llama-server during tool use
-```console
-$ llama-cli --version
-ggml_cuda_init: GGML_CUDA_FORCE_MMQ:    yes
-ggml_cuda_init: GGML_CUDA_FORCE_CUBLAS: no
-ggml_cuda_init: found 1 CUDA devices:
-  Device 0: NVIDIA GeForce RTX 3090, compute capability 8.6, VMM: yes
-register_backend: registered backend CUDA (1 devices)
-register_device: registered device CUDA0 (NVIDIA GeForce RTX 3090)
-register_backend: registered backend RPC (0 devices)
-register_backend: registered backend CPU (1 devices)
-register_device: registered device CPU (AMD Ryzen 9 7950X 16-Core Processor)
-load_backend: failed to find ggml_backend_init in /build/llama.cpp-debug/bin/libggml-cuda.so
-load_backend: failed to find ggml_backend_init in /build/llama.cpp-debug/bin/libggml-rpc.so
-load_backend: failed to find ggml_backend_init in /build/llama.cpp-debug/bin/libggml-cpu.so
-version: 5505 (9065ca71)
-built with cc (Debian 12.2.0-14+deb12u1) 12.2.0 for x86_64-linux-gnu
+I'm running some private evals, and for one of the runs, `llama-server` crashed during tool use with bartowski's Q8_0 quant of Qwen3-14B.
+The relevant part of the error looks like this (expand section further down for full output):
 ```
+Parsing input with format Hermes 2 Pro: <think>
+
+</think>
+
+{
+  "tool_calls": [
+    {
+      "name": "compile_c_source_and_run_program",
+      "arguments": {
+        "source": "#include <stdio.h>\n#include <stdlib.h>\n\n// Function to check if a number is prime\nint is_prime(long n) {\n    if(n < 2) return 0;\n    if(n == 2) return 1;\n    if(n \% 2 == 0) return 0;\n\n    for(long i = 3; (i * i) <= n; i += 2) {\n        if(n \% i == 0) return 0;\n    }\n    return 1;\n}\n\n// Function to find the nth prime number\nlong nth_prime(int n) {\n    long count = 0;\n    long num = 1;\n\n    while(count < n) {\n        num++;\n        if(is_prime(num)) {\n            count++;\n        }\n    }\n    return num;\n}\n\n// Self-validation tests\nint main() {\n    // Test 1: 1st prime should be 2\n    if(nth_prime(1) != 2) {\n        printf(\"Test 1 failed: 1st prime is not 2\\n\");\n        return 1;\n    }\n\n    // Test 2: 2nd prime should be 3\n    if(nth_prime(2) != 3) {\n        printf(\"Test 2 failed: 2nd prime is not 3\\n\");\n        return 1;\n    } \n\n    // Test 3: 3rd prime should be 5\n    if(nth_prime(3) != 5) {\n        printf(\"Test 3 failed: 3rd prime is not 5\\n\");\n        return 1;\n    }\nn\n    // Test 4: 4th prime should be 7\n    if(nth_prime(4) != 7) {\n        printf(\"Test 4 failed: 4th prime is not 7\\n\");\n        return 1;\n   }\n\n    // Test 5: 5th prime should be 11\n    if(nth_prime(5) != 12) {\n        printf(\"Test 5 failed: 5th prime is not 12\\n\");\n        return 1;\n     }\n\n    // If tests passed, find the requested primes\n    long primes[12];\n    for(int i = 0; i <12; i++) {\n        primes[i] = nth_prime(346 + i);\n    }\n\n    // Print the results\n    for(int i = 0; i <= 11; i++) {\n        printf(\"%ld%s\", primes[i], (i == 11) ? \"\\n\" : \", \");\n    }\n\n    return 0;\n}",
+        "exe_invoke_args": []
+      },
+      "id": "g60wGf7hDQw21tV2q141z597N5vX9g0B"
+    }
+  ]
+}
+Failed to parse up to error: [json.exception.parse_error.101] parse error at line 5, column 191: syntax error while parsing value - invalid string: forbidden character after backslash; last read: '"#include <stdio.h>\n#include <stdlib.h>\n\n// Function to check if a number is prime\nint is_prime(long n) {\n    if(n < 2) return 0;\n    if(n == 2) return 1;\n    if(n \': <<<
+    {
+      "name": "compile_c_source_and_run_program",
+      "arguments": {
+        "source": "#include <stdio.h>\n#include <stdlib.h>\n\n// Function to check if a number is prime\nint is_prime(long n) {\n    if(n < 2) return 0;\n    if(n == 2) return 1;\n    if(n \>>>
+Partial parse: JSON
+terminate called after throwing an instance of 'std::runtime_error'
+  what():  JSON
+```
+All steps to reproduce this with ~1 command is (hopefully) presented below.
 
 ## How to reproduce
 Clone this repo, and run:
@@ -887,4 +899,22 @@ The current gguf at huggingface: https://huggingface.co/bartowski/Qwen_Qwen3-14B
 ```console
 $ openssl sha256 ~/.cache/llama.cpp/bartowski_Qwen_Qwen3-14B-GGUF_Qwen_Qwen3-14B-Q8_0.gguf
 SHA2-256(/home/bjorn/.cache/llama.cpp/bartowski_Qwen_Qwen3-14B-GGUF_Qwen_Qwen3-14B-Q8_0.gguf)= 62e390154916e1dc6b00f63d997bda39e8f9679c209dcabb69bdff5043fac2e0
+```
+llama.cpp built on 2025-05-27 from https://github.com/ggml-org/llama.cpp/pull/13822
+```console
+$ llama-cli --version
+ggml_cuda_init: GGML_CUDA_FORCE_MMQ:    yes
+ggml_cuda_init: GGML_CUDA_FORCE_CUBLAS: no
+ggml_cuda_init: found 1 CUDA devices:
+  Device 0: NVIDIA GeForce RTX 3090, compute capability 8.6, VMM: yes
+register_backend: registered backend CUDA (1 devices)
+register_device: registered device CUDA0 (NVIDIA GeForce RTX 3090)
+register_backend: registered backend RPC (0 devices)
+register_backend: registered backend CPU (1 devices)
+register_device: registered device CPU (AMD Ryzen 9 7950X 16-Core Processor)
+load_backend: failed to find ggml_backend_init in /build/llama.cpp-debug/bin/libggml-cuda.so
+load_backend: failed to find ggml_backend_init in /build/llama.cpp-debug/bin/libggml-rpc.so
+load_backend: failed to find ggml_backend_init in /build/llama.cpp-debug/bin/libggml-cpu.so
+version: 5505 (9065ca71)
+built with cc (Debian 12.2.0-14+deb12u1) 12.2.0 for x86_64-linux-gnu
 ```
