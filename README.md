@@ -30,7 +30,7 @@ terminate called after throwing an instance of 'std::runtime_error'
 All steps to reproduce this with ~1 command is (hopefully) presented below.
 
 ## How to reproduce
-Clone this repo, and run:
+Clone this repo, and run [reproducer-llamacpp.sh](reproducer-llamacpp.sh):
 ```console
 $ PATH=/build/llama.cpp-debug/bin:$PATH ./reproducer-llamacpp.sh
 ```
